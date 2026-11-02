@@ -8,9 +8,12 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Spec workflow (important)
 
-- The spec lives in numbered PRDs: `prd-1.md`, `prd-2.md`, … Each user-requested change gets a **new** file: copy the highest-numbered PRD to `prd-(N+1).md`, bump the `문서 버전` line in the header table, and append a numbered section describing the change. Never edit older PRDs.
-- The game must match the highest-numbered PRD. Note that `ls` sorts lexically (`prd-10` before `prd-2`); use `ls prd-*.md | sort -V`.
-- Implementation decisions that deviate from classic rules are recorded in the PRD (§13 in prd-3 onward), e.g. mortgaged property received via trade/bankruptcy auto-pays 10% interest and stays mortgaged.
+- **`docs/MASTER_PRD.md` is the single source of truth** for current intended behavior, with stable IDs (`SYS-`, `REQ-`, `UI-`, `DATA-`, `NFR-`). The game must match it.
+- Every change: inspect → classify (A balance · B UI/UX · C existing feature · D bug · E new feature · F docs) → edit the **existing** requirement in place (keep its ID; new IDs only for genuinely new requirements, never reuse deleted ones) → append a `CHG-XXX` entry to `docs/CHANGE_LOG.md` (never rewrite old entries) → implement → validate → report.
+- **Never create a new PRD or a versioned copy** for an ordinary change. `docs/FEATURES/FEATURE-XXX.md` only for a substantial, independently understandable feature (still reflected in the Master PRD); `docs/AI_TASKS/TASK-XXX.md` only when a task needs a written scope; bugs go in `docs/BUGS/BUG-XXX.md`.
+- Mark a CHG `Verified` only after validation actually ran; otherwise `Implemented`. If code and Master PRD disagree, don't silently pick one: record it (Known Issues / BUG) and ask.
+- `docs/archive/legacy-prd/prd-1.md … prd-33.md` are the read-only pre-2026-11-02 history (CHG-001~033). Don't edit them or add new `prd-N.md` files.
+- Implementation decisions that deviate from classic rules are recorded in the Master PRD (e.g. REQ-027: mortgaged property received via trade/bankruptcy auto-pays 10% interest and stays mortgaged).
 
 ## Commands
 
@@ -22,6 +25,7 @@ node --check js/ui.js          # syntax check (there is no linter or test framew
 python tools/cut_hamsters.py   # regenerate assets/hamsters/*.png from assets/hamsters/원본/ sheets
 python tools/cut_buildings.py  # newest image in assets/buildings/원본/ → house.png, palace.png
 python tools/cut_dice.py [img] # newest image in assets/dice/원본/ → face1..6.png (or face.png)
+python tools/make_blink.py [id]  # assets/hamsters/<id>.png → <id>-blink.png (closed-eye frame for blinking; rerun after replacing a hamster image)
 python tools/make_world_map.py land.geojson  # Natural Earth ne_110m_land.geojson → assets/background/world-map.svg
 ```
 The Python tools need Pillow, numpy, scipy. UI behaviour was verified with headless Chrome via puppeteer-core outside the repo; there is no UI test in the repo.
@@ -52,7 +56,7 @@ Scripts are classic `<script>` tags (no ES modules, since `file://` blocks them)
 
 | Asset | Path | Fallback when missing |
 |---|---|---|
-| Hamsters | `assets/hamsters/<id>.png`, optional `-happy` / `-sad` / `-sleep` variants (detected by `Hamster.preload`) | built-in SVG |
+| Hamsters | `assets/hamsters/<id>.png`, optional `-happy` / `-sad` / `-sleep` / `-blink` variants (detected by `Hamster.preload`) | built-in SVG |
 | Buildings | `assets/buildings/house.png`, `palace.png` | Fluent icons in `assets/icons/` (via `onerror`) |
 | Dice | `assets/dice/face1..6.png`, else `face.png` (adds `.tex` / `.faces` classes on `#dice`) | glass CSS dice |
 | Landmarks | `assets/landmarks/<cc>.png` (`cc` is the country code derived from the city's flag emoji) | none |

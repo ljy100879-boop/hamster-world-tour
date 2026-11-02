@@ -374,6 +374,8 @@
     board.style.aspectRatio = 'auto';
     board.style.width = w + 'px';
     board.style.height = h + 'px';
+    // 휴대폰: 패널은 하단 시트 — 접힌 시트가 보드 아래 남는 높이를 차지 (최소 200px)
+    document.documentElement.style.setProperty('--sheet-h', Math.max(200, window.innerHeight - h - 24) + 'px');
   }
 
   // ---------- 말 ----------
@@ -911,11 +913,21 @@
         case 'build':
           await buildAnim(ev.pos, ev.level);
           break;
-        case 'bankrupt': {
+        case 'bankrupt': { // 쳇바퀴 위에서 달리다 떨어지며 퇴장 (REQ-130)
           const t = tokenEl(ev.pid);
-          if (t) t.classList.add('gone');
           Sound.bad();
-          await sleep(fast ? 200 : 700);
+          if (t && !t.classList.contains('gone')) {
+            const ms = fast ? 450 : 1500;
+            const wheel = document.createElement('span');
+            wheel.className = 'hwheel';
+            t.prepend(wheel);
+            t.style.setProperty('--fall', ms + 'ms');
+            t.classList.add('wheel-fall');
+            await sleep(ms);
+            t.classList.remove('wheel-fall');
+            wheel.remove();
+            t.classList.add('gone');
+          }
           break;
         }
         case 'attack':
@@ -1676,6 +1688,30 @@
     img.onload = () => { bg.classList.add('custom'); bg.style.backgroundImage = 'url("assets/background/bg.png")'; };
     img.src = 'assets/background/bg.png';
   }
+
+  // ---------- 눈 깜빡임 (REQ-130): 화면 장식이라 Math.random 사용 ----------
+  function blinkLoop() {
+    if (document.hidden) return;
+    document.querySelectorAll('#tokens .hamster, #start-hero .hamster, #hamster-pick .hamster, .wb-ham .hamster').forEach((el) => {
+      if (Math.random() > 0.045 || el.classList.contains('blinking')) return;
+      const tok = el.closest('.token');
+      if (tok && (tok.dataset.mood || tok.classList.contains('gone') || tok.classList.contains('caged') || tok.classList.contains('wheel-fall'))) return;
+      const blink = (after) => {
+        el.classList.add('blinking');
+        setTimeout(() => { el.classList.remove('blinking'); if (after) setTimeout(after, 140); }, 150);
+      };
+      blink(Math.random() < 0.2 ? () => blink() : null); // 가끔 두 번 깜빡
+    });
+  }
+  setInterval(blinkLoop, 400);
+
+  // 휴대폰 하단 시트: 손잡이를 누르면 펼치기/접기
+  $('#sheet-handle').onclick = () => {
+    const side = $('.side');
+    const open = side.classList.toggle('expanded');
+    $('#sheet-handle').setAttribute('aria-expanded', open ? 'true' : 'false');
+    if (!open) side.scrollTop = 0;
+  };
 
   probeDiceTextures();
   buildWorldBg();

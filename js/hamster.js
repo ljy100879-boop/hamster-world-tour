@@ -90,7 +90,7 @@
       const img = new Image();
       img.onload = () => {
         avail[h.id][m] = true;
-        if (m === "base") MOODS.forEach((x) => probe(h, x)); // 기본 이미지가 있을 때만 표정 이미지 확인
+        if (m === "base") MOODS.concat("blink").forEach((x) => probe(h, x)); // 기본 이미지가 있을 때만 표정·깜빡임 이미지 확인
         fin();
       };
       img.onerror = fin;
@@ -101,7 +101,7 @@
   }
 
   function imageHtml(h, a, extraClass) {
-    const moods = MOODS.filter((m) => a[m]).map((m) => `<img class="hm hm-${m}" src="${DIR}${h.id}-${m}.png" alt="">`).join("");
+    const moods = MOODS.concat("blink").filter((m) => a[m]).map((m) => `<img class="hm hm-${m}" src="${DIR}${h.id}-${m}.png" alt="">`).join("");
     return `<span class="hamster himg ${extraClass || ""}" role="img" aria-label="${h.name}">
       <img class="hb" src="${DIR}${h.id}.png" alt="">${moods}<span class="tear-badge">💧</span><span class="zzz-badge">Zz</span></span>`;
   }

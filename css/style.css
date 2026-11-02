@@ -419,7 +419,7 @@ button { font-family: inherit; }
 .construct.fast { --d: .38s; }
 .construct img { position: absolute; object-fit: contain; }
 .construct .crane { width: 62%; height: 62%; left: -16%; top: -20%; transform-origin: 20% 100%; animation: crane var(--d) ease-in-out; }
-.construct .rise { width: 58%; height: 58%; bottom: 14%; left: 21%; transform-origin: 50% 100%; animation: rise var(--d) cubic-bezier(.3, 1.4, .5, 1) both; }
+.construct .rise { width: 58%; height: 58%; bottom: 14%; left: 21%; transform-origin: 50% 100%; animation: rise-build var(--d) cubic-bezier(.3, 1.4, .5, 1) both; }
 .construct .rise.big { width: 70%; height: 70%; left: 15%; }
 .construct .hammer { width: 34%; height: 34%; right: -8%; top: 4%; transform-origin: 80% 80%; animation: hammer calc(var(--d) / 5) ease-in-out 5 alternate; }
 .construct .puff { position: absolute; bottom: 8%; width: 18%; height: 18%; border-radius: 50%; background: #fff; box-shadow: 0 0 .6em rgba(160, 120, 60, .4); opacity: 0; animation: puff calc(var(--d) * .6) ease-out calc(var(--d) * .4); }
@@ -430,7 +430,7 @@ button { font-family: inherit; }
 }
 @keyframes cshow { 0% { transform: scale(.4); opacity: 0; } 12% { transform: scale(1); opacity: 1; } 85% { opacity: 1; } 100% { opacity: 0; transform: scale(1.05); } }
 @keyframes crane { 0%, 100% { transform: rotate(0); } 30% { transform: rotate(-10deg); } 60% { transform: rotate(6deg); } }
-@keyframes rise { 0%, 25% { transform: translateY(40%) scaleY(0); opacity: 0; } 45% { opacity: 1; } 70% { transform: translateY(0) scaleY(1.18); } 100% { transform: scaleY(1); opacity: 1; } }
+@keyframes rise-build { 0%, 25% { transform: translateY(40%) scaleY(0); opacity: 0; } 45% { opacity: 1; } 70% { transform: translateY(0) scaleY(1.18); } 100% { transform: scaleY(1); opacity: 1; } }
 @keyframes hammer { from { transform: rotate(25deg); } to { transform: rotate(-35deg); } }
 @keyframes puff { 0% { opacity: .9; transform: scale(.3); } 100% { opacity: 0; transform: scale(1.6) translateY(-40%); } }
 
@@ -742,7 +742,7 @@ button { font-family: inherit; }
   animation: spin 8s linear infinite;
 }
 .result-hero .crown { position: absolute; top: 0; left: 50%; z-index: 2; font-size: 40px; font-family: var(--emoji); animation: crown 1.2s ease-in-out infinite alternate; }
-@keyframes spin { to { transform: rotate(360deg); } }
+
 @keyframes crown { from { transform: translateX(-50%) translateY(0) rotate(-8deg); } to { transform: translateX(-50%) translateY(-6px) rotate(8deg); } }
 .result-hero.lose .hamster { animation: sway 1.6s ease-in-out infinite alternate; filter: saturate(.7); }
 @keyframes sway { from { transform: rotate(-6deg) translateY(4px); } to { transform: rotate(6deg); } }
@@ -821,3 +821,48 @@ button { font-family: inherit; }
 .wb-ham .hamster { width: 100%; height: 100%; filter: drop-shadow(0 .6vmin .4vmin rgba(80, 50, 10, .35)); }
 .wb-ham::after { content: ''; position: absolute; left: 50%; bottom: -6%; width: 40%; height: 9%; margin-left: -20%; border-radius: 50%; background: rgba(80, 50, 10, .25); }
 @keyframes wb-bob { 50% { transform: translate(-50%, -96%); } }
+
+/* ---------- 눈 깜빡임 (REQ-130) ---------- */
+.himg .hm-blink { transition: none; }
+.himg.blinking .hm-blink { opacity: 1; }
+.himg.blinking:has(.hm-blink) .hb { opacity: 0; transition: none; }
+.hamster.blinking .eyes-open { display: none; }
+.hamster.blinking .eyes-closed { display: inline; }
+
+/* ---------- 파산: 쳇바퀴에서 떨어지며 퇴장 (REQ-130) ---------- */
+.token .hwheel {
+  position: absolute; left: 50%; top: 52%; width: 118%; aspect-ratio: 1; border-radius: 50%;
+  transform: translate(-50%, -50%);
+  border: calc(.55 * var(--u)) solid #a8743f; box-shadow: inset 0 0 0 calc(.3 * var(--u)) #e8c48f;
+  background: repeating-conic-gradient(rgba(122, 82, 40, .55) 0 5deg, transparent 5deg 30deg);
+  animation: hwheel-spin .45s linear infinite, hwheel-out var(--fall, 1.5s) ease-in forwards;
+}
+.token.wheel-fall .hamster { animation: wheel-fall var(--fall, 1.5s) ease-in forwards; }
+@keyframes hwheel-spin { to { transform: translate(-50%, -50%) rotate(360deg); } }
+@keyframes hwheel-out { 0%, 70% { opacity: 1; } 100% { opacity: 0; } }
+@keyframes wheel-fall {
+  0% { transform: translateY(0); } 9% { transform: translateY(-9%); } 18% { transform: translateY(0); }
+  27% { transform: translateY(-9%); } 36% { transform: translateY(0); }
+  50% { transform: translate(18%, -35%) rotate(-25deg); opacity: 1; }
+  100% { transform: translate(70%, 190%) rotate(230deg); opacity: 0; }
+}
+
+/* ---------- 휴대폰: 보드는 위, 패널은 하단 시트 (UI-007) ---------- */
+.sheet-handle { display: none; }
+@media (max-width: 900px) {
+  .layout { padding-bottom: calc(var(--sheet-h, 45vh) + 12px); }
+  .side {
+    position: fixed; left: 0; right: 0; bottom: 0; z-index: 40;
+    max-height: var(--sheet-h, 45vh); overflow-y: auto; overscroll-behavior: contain;
+    background: var(--bg); border-top: 2px solid var(--line); border-radius: 20px 20px 0 0;
+    box-shadow: 0 -10px 28px rgba(80, 50, 10, .22); padding: 0 10px 12px;
+    transition: max-height .25s ease;
+  }
+  .side.expanded { max-height: 82vh; }
+  .sheet-handle {
+    display: flex; justify-content: center; align-items: center; position: sticky; top: 0; z-index: 2;
+    width: calc(100% + 20px); margin: 0 -10px 4px; height: 26px; border: 0; padding: 0; cursor: pointer;
+    background: var(--bg); border-radius: 20px 20px 0 0; order: -3;
+  }
+  .sheet-handle i { width: 46px; height: 5px; border-radius: 3px; background: #c9b48f; }
+}
