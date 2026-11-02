@@ -328,7 +328,11 @@
           return;
         }
         if (pr.owner === pid) {
-          if (!canLandBuild(s, pid, i)) { s.phase = 'build'; s.pendingBuild = i; }
+          const why = canLandBuild(s, pid, i);
+          if (!why) { s.phase = 'build'; s.pendingBuild = i; return; }
+          // 지을 수 없으면 이유를 알림 (REQ-101). 기록은 사람만 (컴퓨터 것까지 남기면 기록이 너무 길어짐)
+          emit(s, { type: 'buildBlocked', pid, pos: i, reason: why });
+          if (!p.isAI) log(s, `${p.name}: ${sp.name}에 건물을 지을 수 없어요 — ${why}`);
           return;
         }
         if (ctx && ctx.noRent) { log(s, `${p.name}: 무료 항공권으로 ${sp.name} 통행료 면제!`, 'good'); return; }
@@ -594,9 +598,10 @@
   // 내 땅에 도착했을 때 짓기: 같은 색을 다 갖지 않아도, 균등 규칙 없이 한 단계
   function canLandBuild(s, pid, i) {
     const sp = BOARD[i], pr = s.props[i];
-    if (!pr || sp.type !== 'prop' || pr.owner !== pid) return '내 도시가 아니에요';
-    if (pr.mortgaged) return '저당 잡힌 도시예요';
-    if (pr.houses >= 5) return '이미 궁전이 있어요';
+    if (!pr || pr.owner !== pid) return '내 도시가 아니에요';
+    if (sp.type !== 'prop') return '공항·공공시설에는 건물을 지을 수 없어요';
+    if (pr.mortgaged) return '저당 잡힌 도시예요 (저당을 풀면 지을 수 있어요)';
+    if (pr.houses >= 5) return '이미 궁전까지 다 지었어요';
     if (pr.houses < 4 && s.bankHouses < 1) return '은행에 굴이 다 떨어졌어요';
     if (pr.houses === 4 && s.bankHotels < 1) return '은행에 궁전이 다 떨어졌어요';
     if (P(s, pid).money < sp.house) return '해바라기씨가 부족해요';

@@ -50,7 +50,7 @@ Scripts are classic `<script>` tags (no ES modules, since `file://` blocks them)
 - Modals use three layers: `state` (buy/auction/trade offer/game over; derived from engine state in `syncStateModal`), `user` (windows the player opened), and `card`.
 - Other moving parts in this file: 3D buildings drawn on the board's inner edge (`renderBuildings`), the hold-to-roll power gauge (`startCharge`/`releaseCharge`), auto end-turn when nothing is left to do, and 3D CSS dice whose face rotations are in `FACE_ROT`. `window.HWT` exposes the state for debugging.
 
-**Sizing.** `sizeBoard()` sets explicit board pixels: it fills the screen height and widens up to 1.45× on wide screens (square at ≤900px). Inside the board, every size uses `calc(N * var(--u))`, where `--u` is the average of `cqw` and `cqh` on the board container. Don't write raw `cqw`/`cqh` in new CSS. Overlays appended to `<body>` (the construction scene) set `font-size` from the board size in JS and use `em` instead.
+**Sizing.** `sizeBoard()` sets explicit board pixels: it fills the screen height and widens up to 1.45× on wide screens (square at ≤900px). Inside the board, every size uses `calc(N * var(--u))`, where `--u` is the average of `cqw` and `cqh` on the board container. Don't write raw `cqw`/`cqh` in new CSS. Exception: `.center-inner` redefines `--u` as `min(avg, 1cqh)` because its content stacks vertically and would otherwise overflow the centre on wide (1.45×) boards (BUG-003) — keep new centre content inside it. Overlays appended to `<body>` (the construction scene) set `font-size` from the board size in JS and use `em` instead.
 
 **Assets are optional, user-supplied, and have fallbacks.** The user generates images with external AI tools; prompt guides live in `assets/*/PROMPTS.md`.
 

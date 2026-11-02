@@ -63,12 +63,12 @@
 
   // ---------- 토스트 ----------
   let toastTimer = 0;
-  function toast(text) {
+  function toast(text, ms) {
     const el = $('#toast');
     el.textContent = text;
     el.classList.add('show');
     clearTimeout(toastTimer);
-    toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+    toastTimer = setTimeout(() => el.classList.remove('show'), ms || 2200);
   }
 
   // ---------- 모달 ----------
@@ -145,6 +145,7 @@
 
   function enterGame() {
     cancelQuiz();
+    resetMonoSeen();
     endFxDone = false;
     document.querySelectorAll('#end-fx').forEach((x) => x.remove());
     Object.keys(layers).forEach(closeModal);
@@ -867,6 +868,15 @@
           bubble(ev.from, '내 땅이… 😭');
           await sleep(fast ? 250 : 900);
           break;
+        case 'buildBlocked': // 내 땅인데 지을 수 없을 때 이유 (REQ-101)
+          if (ev.pid === HUMAN) {
+            const sp = BOARD[ev.pos], me = S.players[HUMAN];
+            const money = sp.house && me.money < sp.house ? ` (건설비 ${fmt(sp.house)} · 가진 씨앗 ${fmt(me.money)})` : '';
+            toast(`🏗️ ${sp.name}: ${ev.reason}${money}`, 3500);
+            bubble(ev.pid, '못 지어요 😢');
+            await sleep(fast ? 150 : 500);
+          }
+          break;
         case 'cardVoid':
           bubble(ev.pid, ev.avoided ? '휴~ 피했다! 😌' : '카드 무효… 😢');
           mood(ev.pid, ev.avoided ? 'happy' : 'sad', 1500);
@@ -1028,6 +1038,7 @@
     layoutTokens();
     syncStateModal();
     syncCardQuiz();
+    checkNewMonopoly();
     if (layers.user && layers.user._refresh) {
       const r = layers.user._refresh;
       refreshing = true;
@@ -1132,6 +1143,7 @@
       } else {
         html = `<div class="msg">🐹 내 차례!</div><div class="sub">가운데 주사위 아래 버튼(또는 스페이스바)을 꾹 눌렀다 떼면 던져요</div>`;
       }
+      html += buildHint();
     } else if (S.phase === 'buy') {
       html = `<div class="msg">📍 ${BOARD[S.pendingBuy].name}에 도착!</div>
         <div class="btns"><button class="btn primary" data-a="showBuy">구매 창 열기</button></div>`;
@@ -1156,6 +1168,7 @@
         ? `<div class="msg">🎲 더블! 한 번 더 굴려요</div><div class="sub">가운데 주사위 아래 버튼을 꾹 눌렀다 떼세요</div>`
         : `<div class="msg">📍 ${here.name}</div><div class="sub">건설·저당·거래를 하고 턴을 끝내세요</div>
            <div class="btns"><button class="btn primary big" data-a="endTurn" data-primary>턴 끝내기 ✔</button></div>`;
+      html += buildHint();
     }
     if (S.phase !== 'postRoll') autoPaused = false;
     if (autoEndReady()) scheduleAutoEnd(); else clearAutoEnd();
@@ -1163,6 +1176,30 @@
     box._html = html;
     box.innerHTML = html;
     box.querySelectorAll('[data-a]').forEach((b) => { b.onclick = () => onAction(b.dataset.a); });
+  }
+
+  // 같은 색을 다 모은 도시에 지금 지을 수 있는 건물 수 안내 (UI-008) — "내 땅 관리"에선 여러 채를 한 번에 지을 수 있음
+  function buildHint() {
+    const n = E.ownedBy(S, HUMAN).filter((i) => !E.canBuild(S, HUMAN, i)).length;
+    if (!n) return '';
+    return `<div class="build-hint"><span>🏠 같은 색을 다 모은 도시 ${n}곳에 지금 건물을 지을 수 있어요. 한 턴에 여러 채도 돼요!</span>
+      <button class="btn small" data-a="manage">내 땅 관리 열기</button></div>`;
+  }
+
+  // 같은 색을 처음 다 모았을 때 알림 (UI-008). 이어하기로 들어온 게임의 기존 독점은 알리지 않음
+  let monoSeen = new Set();
+  function propGroups() { return Object.keys(GROUPS).filter((g) => g !== 'airport' && g !== 'util'); }
+  function resetMonoSeen() { monoSeen = new Set(propGroups().filter((g) => E.ownsGroup(S, HUMAN, g))); }
+  function checkNewMonopoly() {
+    if (busy || !S || S.phase === 'gameover') return;
+    for (const g of propGroups()) {
+      const has = E.ownsGroup(S, HUMAN, g);
+      if (has && !monoSeen.has(g)) {
+        monoSeen.add(g);
+        toast(`🏠 ${GROUPS[g].name} 색을 다 모았어요! '내 땅 관리'에서 건물을 여러 채 지을 수 있어요`, 5000);
+        bubble(HUMAN, '다 모았다! 🎉');
+      } else if (!has) monoSeen.delete(g); // 거래 등으로 잃으면 다시 모았을 때 또 알림
+    }
   }
 
   function onAction(a) {

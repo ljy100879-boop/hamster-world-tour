@@ -1,4 +1,5 @@
 """햄스터 눈 감은 프레임 만들기: assets/hamsters/<id>.png → <id>-blink.png  (REQ-130 눈 깜빡임)
+결과는 눈 부분만 있는 겹침용 그림 (나머지 투명) — 게임이 기본 그림 위에 겹쳐 보인다.
 
 사용법: python tools/make_blink.py [id ...]   (생략하면 4마리 모두)
 
@@ -77,6 +78,16 @@ def make(id_):
         lw = max(3, int(ew * 0.11))
         box = [cx - ew * 0.45, cy - ew * 0.28, cx + ew * 0.45, cy + ew * 0.28]
         d.arc(box, start=20, end=160, fill=(43, 26, 16, 255), width=lw)  # 아래로 휜 감은 눈 ‿
+    # 게임은 이 그림을 기본 그림 "위에 겹쳐" 쓴다 → 눈 부분만 남기고 나머지는 투명하게
+    # (윤곽까지 겹치면 반투명 가장자리가 두 번 칠해져 깜빡일 때마다 테두리가 진해짐, BUG-002)
+    keep = np.zeros(px.shape[:2], bool)
+    for _, x0, y0, x1, y1, _m in eyes:
+        ew, eh = x1 - x0, y1 - y0
+        keep[max(0, int(y0 - eh * 0.35)):int(y1 + eh * 0.35), max(0, int(x0 - ew * 0.35)):int(x1 + ew * 0.35)] = True
+    soft_keep = np.asarray(Image.fromarray((keep * 255).astype('uint8')).filter(ImageFilter.GaussianBlur(4))) / 255.0
+    arr = np.array(res)
+    arr[..., 3] = (arr[..., 3] * soft_keep).astype('uint8')
+    res = Image.fromarray(arr)
     dst = os.path.join(DIR, id_ + '-blink.png')
     res.save(dst)
     print(f'{dst}: eyes at {[(int(e[1]), int(e[2]), int(e[3]), int(e[4])) for e in eyes]}')

@@ -113,6 +113,32 @@ console.log('== 내 땅에 도착하면 건물 짓기 ==');
   check(E.act(s, H, { type: 'skipBuild' }) === '' && s.phase === 'postRoll' && s.props[3].houses === 0, '안 짓기');
 }
 
+console.log('== 내 땅인데 지을 수 없으면 이유 알림 ==');
+for (const [label, setup, pos, expect] of [
+  ['공항', (s) => { s.props[5].owner = H; }, 5, '공항·공공시설'],
+  ['저당', (s) => { s.props[3].owner = H; s.props[3].mortgaged = true; }, 3, '저당'],
+  ['돈 부족', (s) => { s.props[3].owner = H; s.players[H].money = 20; }, 3, '해바라기씨가 부족'],
+  ['궁전 완성', (s) => { s.props[3].owner = H; s.props[3].houses = 5; s.bankHotels--; }, 3, '궁전까지'],
+  ['은행 굴 없음', (s) => { s.props[3].owner = H; s.bankHouses = 0; }, 3, '굴이 다 떨어졌'],
+]) {
+  const s = game();
+  setup(s);
+  s.seed = seedFor(s.seed, 1, 2);
+  s.players[H].pos = pos - 3;
+  if (s.players[H].pos < 0) s.players[H].pos += 40;
+  E.act(s, H, { type: 'roll' });
+  const ev = s.events.find((e) => e.type === 'buildBlocked');
+  check(s.phase === 'postRoll' && ev && ev.pos === pos && ev.reason.includes(expect) && s.log.some((l) => l.text.includes('지을 수 없어요')), `${label}: 건설 단계 없이 이유 "${ev && ev.reason}"`);
+}
+{
+  const s = game();
+  const ai = (H + 1) % 4;
+  s.current = ai; s.props[5].owner = ai;
+  s.seed = seedFor(s.seed, 1, 2); s.players[ai].pos = 2;
+  E.act(s, ai, { type: 'roll' });
+  check(s.events.some((e) => e.type === 'buildBlocked') && !s.log.some((l) => l.text.includes('지을 수 없어요')), '컴퓨터: 이벤트만, 기록은 남기지 않음');
+}
+
 console.log('== 세계 이벤트 (5바퀴마다) ==');
 {
   const s = game();

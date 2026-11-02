@@ -175,7 +175,8 @@ button { font-family: inherit; }
 
 /* 보드 중앙 */
 .center { grid-row: 2 / 11; grid-column: 2 / 11; display: flex; align-items: center; justify-content: center; background: radial-gradient(circle, #fff9e9 0, #fbe5b3 100%); border-radius: calc(1 * var(--u)); }
-.center-inner { display: flex; flex-direction: column; align-items: center; gap: calc(1.6 * var(--u)); }
+/* 가운데 내용은 세로로 쌓이므로 단위를 보드 높이 이하로 제한 — 넓은 보드에서 위·아래 칸에 걸치지 않게 (BUG-003) */
+.center-inner { --u: min(calc((1cqw + 1cqh) / 2), 1cqh); display: flex; flex-direction: column; align-items: center; gap: calc(1.6 * var(--u)); }
 .center-logo { font-family: var(--font-title); font-size: calc(5.4 * var(--u)); color: #c97a00; text-shadow: 0 calc(.4 * var(--u)) 0 #ffe1a1; transform: rotate(-4deg); }
 .center-info { font-size: calc(2.2 * var(--u)); color: var(--muted); text-align: center; line-height: 1.5; }
 .deck-row { display: flex; gap: calc(3 * var(--u)); }
@@ -823,9 +824,9 @@ button { font-family: inherit; }
 @keyframes wb-bob { 50% { transform: translate(-50%, -96%); } }
 
 /* ---------- 눈 깜빡임 (REQ-130) ---------- */
+/* 기본 그림은 그대로 두고 같은 윤곽의 감은 눈 그림을 위에 겹친다 — 기본 그림을 숨기면 0.2초 전환 때문에 전체가 깜빡임 (BUG-002) */
 .himg .hm-blink { transition: none; }
 .himg.blinking .hm-blink { opacity: 1; }
-.himg.blinking:has(.hm-blink) .hb { opacity: 0; transition: none; }
 .hamster.blinking .eyes-open { display: none; }
 .hamster.blinking .eyes-closed { display: inline; }
 
@@ -866,3 +867,6 @@ button { font-family: inherit; }
   }
   .sheet-handle i { width: 46px; height: 5px; border-radius: 3px; background: #c9b48f; }
 }
+
+/* 지금 지을 수 있는 건물 안내 (UI-008) */
+.build-hint { margin-top: 10px; padding: 8px 10px; border: 2px dashed var(--accent); border-radius: 12px; background: #fff4d6; display: flex; flex-direction: column; align-items: center; gap: 6px; font-size: 14px; text-align: center; color: var(--accent-ink); }
