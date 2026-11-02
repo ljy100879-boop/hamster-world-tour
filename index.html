@@ -10,6 +10,14 @@
   <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
+  <!-- 배경: 세계지도 위의 햄스터들 (반투명). assets/background/bg.png 가 있으면 그 그림으로 -->
+  <div id="world-bg" aria-hidden="true">
+    <div class="wb-map">
+      <img class="wb-img" src="assets/background/world-map.svg" alt="">
+      <svg class="wb-route" viewBox="0 0 360 150" preserveAspectRatio="none"></svg>
+      <div class="wb-hams"></div>
+    </div>
+  </div>
   <!-- 시작 화면 -->
   <main id="start-screen" class="screen">
     <div class="start-card">

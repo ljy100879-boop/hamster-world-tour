@@ -71,7 +71,11 @@ button { font-family: inherit; }
 .start-hero .hamster:nth-child(2) { animation-delay: .4s; }
 .start-hero .hamster:nth-child(3) { animation-delay: .8s; }
 .start-hero .hamster:nth-child(4) { animation-delay: 1.2s; }
-.logo { font-family: var(--font-title); font-size: 40px; margin: 4px 0 2px; color: #c97a00; letter-spacing: 1px; text-shadow: 0 3px 0 #ffe1a1; }
+.logo {
+  font-family: 'Maplestory', var(--font-title); font-weight: normal; font-size: clamp(28px, 8.4vw, 46px); white-space: nowrap; margin: 6px 0 4px; letter-spacing: 1px;
+  color: #ffd43b; -webkit-text-stroke: 2px #7a3f0c; paint-order: stroke fill;
+  text-shadow: 0 4px 0 #7a3f0c, 0 8px 10px rgba(122, 63, 12, .25);
+}
 .tagline { margin: 0 0 14px; color: var(--muted); }
 .start-section { margin: 14px 0; text-align: left; }
 .start-section h2 { font-family: var(--font-title); font-size: 17px; margin: 0 0 8px; font-weight: normal; }
@@ -797,3 +801,23 @@ button { font-family: inherit; }
 .worldcard .wl { margin-top: 8px; font-size: 13px; opacity: .85; }
 @keyframes world-pop { 0% { transform: scale(.6) rotate(-4deg); opacity: 0; } 70% { transform: scale(1.05); } }
 .world-now { color: #c2410c; }
+
+/* ---------- 시작 화면 제목 폰트: 메이플스토리 Bold (동글동글) ---------- */
+@font-face {
+  font-family: 'Maplestory';
+  src: url('https://cdn.jsdelivr.net/gh/projectnoonnu/noonfonts_20-04@2.1/MaplestoryOTFBold.woff') format('woff');
+  font-weight: normal; font-style: normal; font-display: swap;
+}
+
+/* ---------- 배경: 세계지도 위의 햄스터들 (화면 가득, 반투명) ---------- */
+#world-bg { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; opacity: .38; background-size: cover; background-position: center; }
+#world-bg.custom .wb-map { display: none; }
+.screen { position: relative; z-index: 1; }
+.wb-map { position: absolute; left: 50%; top: 50%; width: max(100vw, 240vh); aspect-ratio: 360 / 150; transform: translate(-50%, -50%); }
+.wb-img { position: absolute; inset: 0; width: 100%; height: 100%; display: block; }
+.wb-route { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+.wb-route path { fill: none; stroke: #e8890c; stroke-width: 2.5; stroke-dasharray: 7 7; stroke-linecap: round; vector-effect: non-scaling-stroke; }
+.wb-ham { position: absolute; width: calc(9.5vmin * var(--s)); aspect-ratio: 1; transform: translate(-50%, -88%); animation: wb-bob 2.6s ease-in-out var(--d) infinite; }
+.wb-ham .hamster { width: 100%; height: 100%; filter: drop-shadow(0 .6vmin .4vmin rgba(80, 50, 10, .35)); }
+.wb-ham::after { content: ''; position: absolute; left: 50%; bottom: -6%; width: 40%; height: 9%; margin-left: -20%; border-radius: 50%; background: rgba(80, 50, 10, .25); }
+@keyframes wb-bob { 50% { transform: translate(-50%, -96%); } }

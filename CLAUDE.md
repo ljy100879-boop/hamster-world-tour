@@ -22,6 +22,7 @@ node --check js/ui.js          # syntax check (there is no linter or test framew
 python tools/cut_hamsters.py   # regenerate assets/hamsters/*.png from assets/hamsters/원본/ sheets
 python tools/cut_buildings.py  # newest image in assets/buildings/원본/ → house.png, palace.png
 python tools/cut_dice.py [img] # newest image in assets/dice/원본/ → face1..6.png (or face.png)
+python tools/make_world_map.py land.geojson  # Natural Earth ne_110m_land.geojson → assets/background/world-map.svg
 ```
 The Python tools need Pillow, numpy, scipy. UI behaviour was verified with headless Chrome via puppeteer-core outside the repo; there is no UI test in the repo.
 
@@ -57,6 +58,7 @@ Scripts are classic `<script>` tags (no ES modules, since `file://` blocks them)
 | Landmarks | `assets/landmarks/<cc>.png` (`cc` is the country code derived from the city's flag emoji) | none |
 | Flags | `assets/flags/<cc>.svg` | none |
 | Music | `assets/music/bgm.mp3` (looped) | built-in WebAudio carousel waltz in `sound.js` |
+| Background | `assets/background/bg.png` (full-screen, 38% opacity) | `world-map.svg` (from `tools/make_world_map.py`, Natural Earth) + hamsters placed by lon/lat in `WORLD_SPOTS` (`buildWorldBg` in ui.js) |
 
 Source sheets stay in each `원본/` folder. AI-generated "transparent" images often have a fake checkerboard painted in; `tools/cut_sheet.py` detects the background type (real alpha, checkerboard, or solid colour) before cutting. Icon and flag licenses are listed in `assets/LICENSES.md`.
 

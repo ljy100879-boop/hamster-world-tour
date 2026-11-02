@@ -1649,11 +1649,41 @@
     six.src = 'assets/dice/face1.png';
   }
 
+  // ---------- 배경: 세계지도 위의 햄스터들 ----------
+  // 지도는 경도 -180~180, 위도 90~-60 (tools/make_world_map.py) → (경도, 위도)로 위치 계산
+  const WORLD_SPOTS = [ // [경도, 위도, 햄스터 번호, 크기]
+    [-98, 40, 2, 1], [-58, -12, 1, 0.85], [20, 4, 3, 1], [3, 48, 1, 1],
+    [88, 58, 2, 0.8], [127, 38, 0, 1.1], [104, 14, 3, 0.8], [134, -24, 0, 0.9],
+  ];
+  function buildWorldBg() {
+    const bg = $('#world-bg');
+    if (!bg) return;
+    const xy = ([lon, lat]) => [lon + 180, 90 - lat];
+    $('.wb-hams', bg).innerHTML = WORLD_SPOTS.map(([lon, lat, k, size], n) => {
+      const [x, y] = xy([lon, lat]);
+      return `<span class="wb-ham" style="left:${(x / 360 * 100).toFixed(2)}%;top:${(y / 150 * 100).toFixed(2)}%;--s:${size};--d:${(n * 0.37).toFixed(2)}s">${Hamster.svg(HAMSTERS[k])}</span>`;
+    }).join('');
+    // 햄스터들을 잇는 점선 여행 경로 (살짝 휘어진 곡선)
+    const pts = WORLD_SPOTS.map(xy);
+    let d = `M${pts[0][0]},${pts[0][1]}`;
+    for (let k = 1; k < pts.length; k++) {
+      const [x0, y0] = pts[k - 1], [x1, y1] = pts[k];
+      d += ` Q${((x0 + x1) / 2).toFixed(1)},${(Math.min(y0, y1) - 12).toFixed(1)} ${x1},${y1}`;
+    }
+    $('.wb-route', bg).innerHTML = `<path d="${d}"/>`;
+    // 직접 만든 배경 그림이 있으면 그걸로
+    const img = new Image();
+    img.onload = () => { bg.classList.add('custom'); bg.style.backgroundImage = 'url("assets/background/bg.png")'; };
+    img.src = 'assets/background/bg.png';
+  }
+
   probeDiceTextures();
+  buildWorldBg();
   bindToolbar();
   initStart();
   // 햄스터 이미지가 있으면 확인 후 다시 그리기
   Hamster.preload(HAMSTERS, () => {
+    buildWorldBg();
     if (S && !$('#game-screen').classList.contains('hidden')) { buildTokens(); renderAll(); }
     else initStart();
   });
