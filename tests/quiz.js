@@ -139,6 +139,16 @@ for (const [label, setup, pos, expect] of [
   check(s.events.some((e) => e.type === 'buildBlocked') && !s.log.some((l) => l.text.includes('지을 수 없어요')), '컴퓨터: 이벤트만, 기록은 남기지 않음');
 }
 
+console.log('== 특수 칸 도착 이벤트 (도착음) ==');
+for (const [pos, kind] of [[0, 'go'], [7, 'chance'], [2, 'chest'], [20, 'teleport'], [30, 'gotojail'], [10, 'jail'], [4, 'tax'], [6, null], [5, null]]) {
+  const s = game();
+  s.seed = seedFor(s.seed, 1, 2);
+  s.players[H].pos = (pos - 3 + 40) % 40;
+  E.act(s, H, { type: 'roll' });
+  const ev = s.events.filter((e) => e.type === 'land');
+  check(kind ? ev.length === 1 && ev[0].kind === kind && ev[0].pos === pos : ev.length === 0, `${pos}번 칸 → ${kind || '이벤트 없음(도시·공항)'}`);
+}
+
 console.log('== 세계 이벤트 (5바퀴마다) ==');
 {
   const s = game();

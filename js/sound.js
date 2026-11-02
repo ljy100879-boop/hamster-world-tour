@@ -279,6 +279,51 @@
       noise(0.2, { from: 2000, to: 200, vol: 0.15 });
       [1319, 1568, 1319, 1760, 2093].forEach((f, k) => tone(f, 0.09, { type: 'square', vol: 0.04, delay: 0.25 + k * 0.07 }));
     },
+    // 특수 칸 도착음 (REQ-136): kind = 칸 종류 (go, chance, chest, teleport, gotojail, jail, tax)
+    arrive(kind) {
+      switch (kind) {
+        case 'go': // 따-따-단! 짧은 팡파르 + 반짝
+          [[0, 784], [0.1, 784], [0.2, 1047]].forEach(([d, f], k) => {
+            tone(f, k === 2 ? 0.45 : 0.08, { type: 'square', vol: 0.05, delay: d });
+            tone(f, k === 2 ? 0.45 : 0.08, { type: 'triangle', vol: 0.08, delay: d });
+          });
+          [2093, 2637, 3136].forEach((f, k) => tone(f, 0.1, { type: 'sine', vol: 0.035, delay: 0.32 + k * 0.05 }));
+          break;
+        case 'chance': // 띠리리링 마법 종소리
+          [1047, 1175, 1319, 1568, 1760, 2093, 2349, 2637].forEach((f, k) => tone(f, 0.18, { type: 'sine', vol: 0.05, delay: k * 0.045 }));
+          tone(3136, 0.5, { type: 'triangle', vol: 0.025, delay: 0.38 });
+          break;
+        case 'chest': // 뽁! 주머니 여는 소리 + 바스락 + 찍
+          tone(950, 0.09, { to: 320, type: 'sine', vol: 0.14 });
+          noise(0.16, { filter: 'bandpass', q: 1.5, from: 2500, to: 900, vol: 0.06, delay: 0.06 });
+          tone(1900, 0.07, { to: 2700, type: 'triangle', vol: 0.05, delay: 0.24 });
+          break;
+        case 'teleport': // 우우웅~ 포털 울림 + 반짝
+          tone(220, 0.75, { to: 440, type: 'sine', vol: 0.09 });
+          tone(223, 0.75, { to: 660, type: 'triangle', vol: 0.05 });
+          [1319, 1760, 2349].forEach((f, k) => tone(f, 0.12, { type: 'sine', vol: 0.04, delay: 0.5 + k * 0.07 }));
+          break;
+        case 'gotojail': // 삐익-삐익 경찰 호루라기 (빠르게 떨리는 고음 두 번)
+          for (let r = 0; r < 2; r++) {
+            for (let k = 0; k < 7; k++) tone(k % 2 ? 2350 : 2100, 0.045, { type: 'sine', vol: 0.07, delay: r * 0.42 + k * 0.045 });
+          }
+          break;
+        case 'jail': // 철컹 철창 소리
+          noise(0.09, { filter: 'highpass', from: 5000, to: 2500, vol: 0.12 });
+          tone(170, 0.12, { to: 110, type: 'square', vol: 0.07 });
+          tone(1250, 0.35, { to: 1150, type: 'triangle', vol: 0.05, delay: 0.02 });
+          tone(1870, 0.25, { type: 'sine', vol: 0.025, delay: 0.02 });
+          break;
+        case 'tax': // 카-칭 계산대
+          tone(1568, 0.05, { type: 'square', vol: 0.05 });
+          tone(2093, 0.05, { type: 'square', vol: 0.05, delay: 0.06 });
+          noise(0.08, { filter: 'highpass', from: 4000, to: 2000, vol: 0.06, delay: 0.12 });
+          tone(2637, 0.4, { type: 'sine', vol: 0.06, delay: 0.14 });
+          break;
+        default:
+          break;
+      }
+    },
     // 텔레포트: 슈우웅 올라갔다 내려오는 소리
     teleport() {
       tone(300, 0.35, { to: 2400, type: 'sine', vol: 0.08 });

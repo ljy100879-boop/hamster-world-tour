@@ -883,3 +883,55 @@ UI-008: 독점을 처음 완성하면 안내(5초) + 말풍선, 내 차례에 �
 `js/ui.js`(buildHint, checkNewMonopoly, resetMonoSeen), `css/style.css`(.build-hint).
 ### Remaining Issues
 없음.
+
+## CHG-040
+- Date: 2026-11-02
+- Title: 특수 칸 도착음
+- Type: E 새 기능 (작은 기능 — Master PRD에 포함)
+- Status: Verified (소리를 귀로 듣는 확인은 제외)
+- Related Requirements: REQ-136 (신규), REQ-134, SYS-011
+
+### Reason
+사용자 요청: "특수칸(카드칸, 텔레포트칸, 시작칸, 케이지이동칸, 케이지칸 등)에 도착하면 어울리는 특정 효과음".
+### Before
+특수 칸 도착 자체를 알리는 소리 없음 (카드가 열릴 때 카드 소리, 케이지에 갇힐 때 낮은 소리만).
+### After
+특수 칸에 도착하면 엔진이 `land {pid, pos, kind}` 이벤트를 보내고 화면이 `Sound.arrive(kind)`로 칸별 소리를 냄 — 출발(팡파르), 찬스(마법 종), 볼주머니(뽁·바스락), 텔레포트(포털 울림), 케이지로 가시오(호루라기), 케이지 구경(철컹), 세금(카칭). 소리 뒤 0.3초(호루라기 0.7초, 빨리 감기 0.06초) 쉬고 다음 연출. 도시·공항·공공시설은 기존 소리(구매·통행료 등) 그대로.
+### Expected Impact
+`engine.js` 도착 처리에 이벤트 1줄(규칙·난수 영향 없음), `sound.js`, `ui.js`. 저장 데이터 변경 없음.
+### Validation
+- `node tests/quiz.js`에 9개 확인 추가: 0·7·2·20·30·10·4번 칸 도착 시 맞는 `kind` 이벤트 1개, 도시(6)·공항(5)은 없음 — 통과. `tests/cards.js`, `tests/sim.js 30` 통과
+- 헤드리스 Chrome: 7종 소리가 오류 없이 소리 노드를 만듦(3~14개), 실제 굴림 + 수학 문제로 30번 칸 도착 시 `arrive('gotojail')` 호출 후 케이지로 이동
+- **소리를 직접 들어 보지는 못함** — 음색·크기는 사용자 확인 필요
+### Implementation
+`js/engine.js`(landOn), `js/sound.js`(arrive), `js/ui.js`('land' 이벤트), `tests/quiz.js`.
+### Remaining Issues
+음색·음량은 들어 본 뒤 조정 필요할 수 있음.
+
+## CHG-041
+- Date: 2026-11-02
+- Title: 좁고 낮은 화면에서 하단 시트가 보드를 가리는 문제, 태블릿 순간 가로 스크롤 수정 (BUG-004, BUG-005) + CLAUDE.md 보정
+- Type: D 버그 수정
+- Status: Verified
+- Related Requirements: UI-007, NFR-006, BUG-004, BUG-005
+
+### Reason
+사용자 요청 "문제 없는지 한번 쭉 점검해줘" → 점검에서 발견 → "고쳐줘".
+### Before
+- 900px 이하에서 보드를 가로 폭으로만 정해, 세로가 낮은 화면(900×700 등)에서는 보드가 화면보다 커져 시트(최소 200px)가 보드와 굴리기 버튼을 덮음
+- 768px 폭에서 오른쪽 줄 말의 점프·표정 연출이 화면 밖으로 2~3px 나가 순간 가로 스크롤
+- `CLAUDE.md`: 창 레이어를 3개로 적음(실제 4개, `quiz` 포함), 전역 목록에 `Questions` 빠짐
+### After
+- 900px 이하 보드 = `min(가로 폭, 화면 높이 − 시트 최소 − 24)`(하한 240), 시트 최소 높이는 화면 높이 560 미만이면 120px(그 외 200px). UI-007에 규칙 명시
+- 페이지 가로 넘침 잘라 냄(`overflow-x: clip`, 스크롤 영역을 만들지 않음)
+- `CLAUDE.md` 레이어·전역 목록 정정
+### Expected Impact
+`ui.js` `sizeBoard()`, `css/style.css` 한 줄, 문서. 휴대폰 세로·태블릿 세로·PC 크기는 그대로. 휴대폰 가로 모드에선 보드가 작아짐(844×390에서 246px).
+### Validation
+- 헤드리스 Chrome 10개 화면(360×640, 390×844, 667×375, 844×390, 768×1024, 900×700, 901×700, 1024×768, 1400×850, 1920×1080): 시트가 보드를 가리지 않음, 굴리기 버튼 보임, 보드 가운데 내용이 칸 안, 6초 동안 가로 넘침 0회 — 모두 통과. 900×700·844×390 화면을 눈으로 확인
+- `node tests/quiz.js`, `tests/cards.js`, `tests/sim.js 30` 통과
+- 실제 휴대폰 기기에서는 보지 않음
+### Implementation
+`js/ui.js`, `css/style.css`, `CLAUDE.md`, `docs/BUGS/BUG-004.md`, `docs/BUGS/BUG-005.md`.
+### Remaining Issues
+휴대폰 가로 모드에서는 화면이 낮아 보드가 작음(게임 기능에는 문제없음).

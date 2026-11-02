@@ -319,6 +319,8 @@
   function landOn(s, pid, ctx) {
     const p = P(s, pid);
     const i = p.pos, sp = BOARD[i];
+    // 특수 칸 도착 알림 (화면이 칸에 어울리는 도착음을 냄, REQ-136). 규칙에는 영향 없음
+    if (sp.type !== 'prop' && sp.type !== 'airport' && sp.type !== 'util') emit(s, { type: 'land', pid, pos: i, kind: sp.type });
     switch (sp.type) {
       case 'prop': case 'airport': case 'util': {
         const pr = s.props[i];

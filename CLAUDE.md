@@ -32,7 +32,7 @@ The Python tools need Pillow, numpy, scipy. UI behaviour was verified with headl
 
 ## Architecture
 
-Scripts are classic `<script>` tags (no ES modules, since `file://` blocks them), loaded in order `data → engine → ai → questions → hamster → sound → ui`. Each file is an IIFE that exports a global (`GameData`, `Engine`, `AI`, `Hamster`, `Sound`) or, under Node, `module.exports` — so `data.js`, `engine.js`, `ai.js` run headless in `tests/sim.js`.
+Scripts are classic `<script>` tags (no ES modules, since `file://` blocks them), loaded in order `data → engine → ai → questions → hamster → sound → ui`. Each file is an IIFE that exports a global (`GameData`, `Engine`, `AI`, `Questions`, `Hamster`, `Sound`) or, under Node, `module.exports` — so `data.js`, `engine.js`, `ai.js` run headless in `tests/sim.js`.
 
 **`js/engine.js` — all rules, no DOM.** The whole game is one plain JSON state object `s` (serialized to localStorage as-is).
 - Every mutation goes through `Engine.act(s, pid, action)`, which returns `''` on success or a Korean error string, then calls `settle()` (game-over check, skip bankrupt player's turn).
@@ -47,7 +47,7 @@ Scripts are classic `<script>` tags (no ES modules, since `file://` blocks them)
 **`js/ui.js` — rendering and pacing.**
 - The core loop is `pump()`: play queued `s.events` as animations → `renderAll()` → save → if `Engine.actor` is an AI, wait and call `AI.step`, then repeat; it stops when the human must act.
 - Human input goes through `act(action)`. Rolling goes through `rollWithQuiz()` first: a UI-only math quiz whose answer is the upcoming dice total (`Engine.peekDice` reads it without advancing the seed) must be answered before `act({type:'roll'})`; 3 misses send `forfeitRoll`.
-- Modals use three layers: `state` (buy/auction/trade offer/game over; derived from engine state in `syncStateModal`), `user` (windows the player opened), and `card`.
+- Modals use four layers (z-index 50/60/70/75): `state` (buy/build/takeover/auction/target/trade offer/game over; derived from engine state in `syncStateModal`), `user` (windows the player opened), `card` (card reveal, world event), and `quiz` (dice math quiz and card quiz, `renderQuiz`).
 - Other moving parts in this file: 3D buildings drawn on the board's inner edge (`renderBuildings`), the hold-to-roll power gauge (`startCharge`/`releaseCharge`), auto end-turn when nothing is left to do, and 3D CSS dice whose face rotations are in `FACE_ROT`. `window.HWT` exposes the state for debugging.
 
 **Sizing.** `sizeBoard()` sets explicit board pixels: it fills the screen height and widens up to 1.45× on wide screens (square at ≤900px). Inside the board, every size uses `calc(N * var(--u))`, where `--u` is the average of `cqw` and `cqh` on the board container. Don't write raw `cqw`/`cqh` in new CSS. Exception: `.center-inner` redefines `--u` as `min(avg, 1cqh)` because its content stacks vertically and would otherwise overflow the centre on wide (1.45×) boards (BUG-003) — keep new centre content inside it. Overlays appended to `<body>` (the construction scene) set `font-size` from the board size in JS and use `em` instead.

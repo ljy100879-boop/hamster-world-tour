@@ -370,13 +370,16 @@
     const board = $('#board');
     const W = board.parentElement.clientWidth;
     const narrow = window.innerWidth <= 900;
-    const h = narrow ? W : Math.min(W, Math.max(320, window.innerHeight - 24));
-    const w = narrow ? W : Math.min(W, h * 1.45);
+    // 900px 이하: 보드(정사각형)는 아래 하단 시트 자리를 남기고 화면 높이 안에 들어가게 (BUG-004)
+    // 세로가 아주 낮은 화면(휴대폰 가로 등)은 시트 최소 높이를 120px로 줄여 보드·굴리기 버튼이 보이게
+    const sheetMin = window.innerHeight < 560 ? 120 : 200;
+    const h = narrow ? Math.min(W, Math.max(240, window.innerHeight - sheetMin - 24)) : Math.min(W, Math.max(320, window.innerHeight - 24));
+    const w = narrow ? h : Math.min(W, h * 1.45);
     board.style.aspectRatio = 'auto';
     board.style.width = w + 'px';
     board.style.height = h + 'px';
-    // 휴대폰: 패널은 하단 시트 — 접힌 시트가 보드 아래 남는 높이를 차지 (최소 200px)
-    document.documentElement.style.setProperty('--sheet-h', Math.max(200, window.innerHeight - h - 24) + 'px');
+    // 휴대폰: 패널은 하단 시트 — 접힌 시트가 보드 아래 남는 높이를 차지 (최소 sheetMin)
+    document.documentElement.style.setProperty('--sheet-h', Math.max(sheetMin, window.innerHeight - h - 24) + 'px');
   }
 
   // ---------- 말 ----------
@@ -841,6 +844,10 @@
             Sound.hop();
             await sleep(hopMs());
           }
+          break;
+        case 'land': // 특수 칸 도착음 (REQ-136)
+          Sound.arrive(ev.kind);
+          await sleep(fast ? 60 : (ev.kind === 'gotojail' ? 700 : 300));
           break;
         case 'jail':
           disp[ev.pid] = 10;

@@ -18,7 +18,7 @@
 }
 
 * { box-sizing: border-box; }
-html, body { margin: 0; }
+html, body { margin: 0; overflow-x: clip; } /* 말 연출이 화면 밖으로 몇 px 나가도 가로 스크롤이 생기지 않게 (BUG-005) */
 body {
   background: var(--bg) radial-gradient(circle at 20% 10%, #fff 0, transparent 40%);
   color: var(--ink);
